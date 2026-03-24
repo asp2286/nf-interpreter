@@ -176,27 +176,31 @@ jobs:
       - bash: |
           set -euo pipefail
 
-          # Find CLI output in bin/ (not obj/ref which is a reference assembly)
-          CLI_DLL=$(find targets/netcore \
-              -name "nanoFramework.nanoCLR.CLI.dll" \
-              -path "*/bin/Debug/*" | head -1)
+          # The csproj OutputPath is build/bin/Debug/net8.0/ (not inside targets/netcore)
+          CLI_DLL=$(find build/bin/Debug \
+              -name "nanoFramework.nanoCLR.CLI.dll" | head -1)
           CLI_DIR=$(dirname "$CLI_DLL")
           echo "CLI dir: $CLI_DIR"
+
+          if [ -z "$CLI_DLL" ]; then
+            echo "ERROR: CLI dll not found, searching everywhere:"
+            find . -name "nanoFramework.nanoCLR.CLI.dll" 2>/dev/null || true
+            exit 1
+          fi
 
           # Copy dylib next to the tool
           DYLIB=$(find $(Pipeline.Workspace)/osx_build \
               -name "nanoFramework.nanoCLR.dylib" | head -1)
           echo "dylib: $DYLIB"
           cp "$DYLIB" "$CLI_DIR/nanoFramework.nanoCLR.dylib"
-          echo "Copied dylib to CLI output dir"
+          echo "Copied dylib to: $CLI_DIR"
         displayName: Place dylib next to tool
 
       - bash: |
           set -euo pipefail
 
-          CLI_DLL=$(find targets/netcore \
-              -name "nanoFramework.nanoCLR.CLI.dll" \
-              -path "*/bin/Debug/*" | head -1)
+          CLI_DLL=$(find build/bin/Debug \
+              -name "nanoFramework.nanoCLR.CLI.dll" | head -1)
           echo "Running: $CLI_DLL"
 
           # Run with trace to see which library is loaded
