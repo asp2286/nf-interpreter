@@ -31,11 +31,6 @@
 
   <!-- NuGet package files -->
   <ItemGroup>
-    <None Include="..\..\..\build\bin\$(Configuration)\nanoFramework.nanoCLR.dll" Link="NanoCLR\nanoFramework.nanoCLR.dll">
-      <Pack>True</Pack>
-      <PackagePath>tools\net8.0\any\NanoCLR</PackagePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="..\..\..\assets\nf-logo.png">
       <Pack>True</Pack>
       <PackagePath>images</PackagePath>
@@ -82,8 +77,4 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="NanoCLR\" />
-  </ItemGroup>
-  
 </Project>
