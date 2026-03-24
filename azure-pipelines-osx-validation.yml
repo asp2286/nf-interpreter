@@ -239,4 +239,51 @@ jobs:
           targetPath: tool_output.log
           artifactName: tool_output
           artifactType: pipeline
+
+      - bash: |
+          set -euo pipefail
+
+          CLI_DLL=$(find build/bin/Debug -name "nanoFramework.nanoCLR.CLI.dll" | head -1)
+          CLI_DIR=$(dirname "$CLI_DLL")
+
+          STAGING="$(pwd)/staging/nanoCLR-osx-x64"
+          mkdir -p "$STAGING"
+
+          # C# tool output (CLI + Host + all dependencies)
+          cp -r "$CLI_DIR"/. "$STAGING/"
+
+          # Native dylib alongside the tool (NativeNanoClrLoader finds it here)
+          cp "$(Pipeline.Workspace)/osx_build/lib/nanoFramework.nanoCLR.dylib" "$STAGING/"
+
+          # Smoke exe (raw C++ binary for quick native testing)
+          cp "$(Pipeline.Workspace)/osx_build/bin/nanoFramework.nanoCLR" "$STAGING/"
+
+          cat > "$STAGING/README.md" <<'EOF'
+          # nanoCLR macOS x64
+
+          Built by CI.
+
+          ## Run
+
+          ```bash
+          dotnet nanoFramework.nanoCLR.CLI.dll instance --getversion
+          ```
+
+          ## Contents
+
+          - `nanoFramework.nanoCLR.dylib`   native CLR library (macOS x64)
+          - `nanoFramework.nanoCLR.CLI.dll` dotnet CLI tool
+          - `nanoFramework.nanoCLR`         standalone C++ smoke exe
+          EOF
+
+          echo "Staged files:"
+          ls -lh "$STAGING"
+        displayName: Stage artifacts for download
+
+      - task: PublishPipelineArtifact@1
+        displayName: Publish nanoCLR-osx-x64
+        inputs:
+          targetPath: staging/nanoCLR-osx-x64
+          artifactName: nanoCLR-osx-x64
+          artifactType: pipeline
           
