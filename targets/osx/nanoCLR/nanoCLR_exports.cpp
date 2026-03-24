@@ -22,6 +22,7 @@ using BOOL = int;
 using CLR_UINT8 = uint8_t;
 
 static constexpr HRESULT S_OK = 0;
+static constexpr HRESULT E_NOTIMPL = static_cast<HRESULT>(0x80004001);
 
 // ── Settings struct (matches managed nanoCLRSettings / NANO_CLR_SETTINGS) ───
 struct NANO_CLR_SETTINGS
@@ -66,25 +67,21 @@ void nanoCLR_Run(NANO_CLR_SETTINGS nanoClrSettings)
 
 HRESULT nanoCLR_LoadAssembly(const wchar_t *name, const CLR_UINT8 *data, size_t size)
 {
-    (void)name;
-    (void)data;
-    (void)size;
-    // TODO: Forward to assembly loader.
-    return S_OK;
+    (void)name; (void)data; (void)size;
+    // macOS: not yet implemented. Returning E_NOTIMPL so managed code
+    // sees a clear failure rather than silent success.
+    return E_NOTIMPL;
 }
 
 HRESULT nanoCLR_LoadAssembliesSet(const CLR_UINT8 *data, size_t size)
 {
-    (void)data;
-    (void)size;
-    // TODO: Forward to assembly set loader.
-    return S_OK;
+    (void)data; (void)size;
+    return E_NOTIMPL;
 }
 
 HRESULT nanoCLR_Resolve()
 {
-    // TODO: Forward to assembly resolver.
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 void nanoCLR_SetConfigureCallback(ConfigureRuntimeCallback configureCallback)

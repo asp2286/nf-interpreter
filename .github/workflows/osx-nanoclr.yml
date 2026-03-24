@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "targets/osx/**"
+      - "targets/netcore/nanoFramework.nanoCLR/**"
       - ".github/workflows/osx-nanoclr.yml"
   pull_request:
     paths:
       - "targets/osx/**"
+      - "targets/netcore/nanoFramework.nanoCLR/**"
       - ".github/workflows/osx-nanoclr.yml"
 
 jobs:
@@ -46,3 +48,49 @@ jobs:
           path: |
             build/osx/bin/nanoFramework.nanoCLR
             build/osx/smoke.log
+
+  build-netcore-native-osx:
+    runs-on: macos-14
+    needs: build-osx-nanoclr
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Ninja
+        run: |
+          if ! command -v ninja >/dev/null 2>&1; then
+            brew install ninja
+          fi
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Configure netcore native (macOS)
+        run: |
+          cmake -S targets/netcore/nanoFramework.nanoCLR \
+                -B build/netcore-native \
+                -G Ninja \
+                -DBUILD_VERSION=0.0.0.0 \
+                -DCMAKE_BUILD_TYPE=Debug \
+                --fresh
+
+      - name: Build netcore native dylib
+        run: cmake --build build/netcore-native
+
+      - name: Verify dylib exists and exports symbols
+        run: |
+          DYLIB=$(find build/netcore-native -name "*.dylib" | head -1)
+          echo "dylib: $DYLIB"
+          test -f "$DYLIB"
+          nm -gU "$DYLIB" | grep nanoCLR_GetVersion
+          nm -gU "$DYLIB" | grep nanoCLR_Run
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netcore-native-osx
+          path: build/netcore-native/**/*.dylib

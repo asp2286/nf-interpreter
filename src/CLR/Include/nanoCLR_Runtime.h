@@ -51,7 +51,30 @@ typedef CLR_RT_AddressToSymbolMap::iterator CLR_RT_AddressToSymbolMapIter;
 
 #else
 
-#if NANOCLR_VALIDATE_HEAP >= NANOCLR_VALIDATE_HEAP_4_CompactionPlus
+#if defined(VIRTUAL_DEVICE)
+
+#include <set>
+#include <map>
+#include <list>
+#include <string>
+#include <vector>
+
+typedef std::set<std::wstring> CLR_RT_StringSet;
+typedef CLR_RT_StringSet::iterator CLR_RT_StringSetIter;
+
+typedef std::map<std::string, int> CLR_RT_StringMap;
+typedef CLR_RT_StringMap::iterator CLR_RT_StringMapIter;
+
+typedef std::vector<std::wstring> CLR_RT_StringVector;
+typedef CLR_RT_StringVector::iterator CLR_RT_StringVectorIter;
+
+typedef std::map<std::wstring, CLR_UINT32> CLR_RT_SymbolToAddressMap;
+typedef CLR_RT_SymbolToAddressMap::iterator CLR_RT_SymbolToAddressMapIter;
+
+typedef std::map<CLR_UINT32, std::wstring> CLR_RT_AddressToSymbolMap;
+typedef CLR_RT_AddressToSymbolMap::iterator CLR_RT_AddressToSymbolMapIter;
+
+#elif NANOCLR_VALIDATE_HEAP >= NANOCLR_VALIDATE_HEAP_4_CompactionPlus
 #include <list>
 #include <map>
 #endif
@@ -60,6 +83,8 @@ typedef CLR_RT_AddressToSymbolMap::iterator CLR_RT_AddressToSymbolMapIter;
 
 #if defined(_MSC_VER)
 #pragma pack(push, __NANOCLR_RUNTIME_H__, 4)
+#elif defined(VIRTUAL_DEVICE)
+#pragma pack(push, 4)
 #endif
 
 #if defined(_WIN32)
@@ -305,6 +330,12 @@ struct CLR_RT_FileStore
         CLR_RT_StringVector &vec,
         const wchar_t *separators = L" \t");
 };
+
+#else // !_WIN32
+
+#if defined(VIRTUAL_DEVICE)
+typedef std::vector<CLR_UINT8> CLR_RT_Buffer;
+#endif
 
 #endif
 
@@ -2475,17 +2506,17 @@ CT_ASSERT(
 #endif
 
 CT_ASSERT(
-    offsetof(CLR_RT_StackFrame, CLR_RT_StackFrame::m_owningThread) + sizeof(CLR_RT_Thread *) ==
-    offsetof(CLR_RT_StackFrame, CLR_RT_StackFrame::m_evalStack))
+    offsetof(CLR_RT_StackFrame, m_owningThread) + sizeof(CLR_RT_Thread *) ==
+    offsetof(CLR_RT_StackFrame, m_evalStack))
 CT_ASSERT(
-    offsetof(CLR_RT_StackFrame, CLR_RT_StackFrame::m_evalStack) + sizeof(CLR_RT_HeapBlock *) ==
-    offsetof(CLR_RT_StackFrame, CLR_RT_StackFrame::m_arguments))
+    offsetof(CLR_RT_StackFrame, m_evalStack) + sizeof(CLR_RT_HeapBlock *) ==
+    offsetof(CLR_RT_StackFrame, m_arguments))
 CT_ASSERT(
-    offsetof(CLR_RT_StackFrame, CLR_RT_StackFrame::m_arguments) + sizeof(CLR_RT_HeapBlock *) ==
-    offsetof(CLR_RT_StackFrame, CLR_RT_StackFrame::m_locals))
+    offsetof(CLR_RT_StackFrame, m_arguments) + sizeof(CLR_RT_HeapBlock *) ==
+    offsetof(CLR_RT_StackFrame, m_locals))
 CT_ASSERT(
-    offsetof(CLR_RT_StackFrame, CLR_RT_StackFrame::m_locals) + sizeof(CLR_RT_HeapBlock *) ==
-    offsetof(CLR_RT_StackFrame, CLR_RT_StackFrame::m_IP))
+    offsetof(CLR_RT_StackFrame, m_locals) + sizeof(CLR_RT_HeapBlock *) ==
+    offsetof(CLR_RT_StackFrame, m_IP))
 
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
@@ -3906,11 +3937,11 @@ extern CLR_UINT32 g_buildCRC;
 // CT_ASSERT macro generates a compiler error in case the size of any structure changes.
 //
 
-#ifdef _WIN64
+#if defined(_WIN64) || (defined(VIRTUAL_DEVICE) && (defined(__LP64__) || defined(__x86_64__) || defined(__aarch64__)))
 CT_ASSERT(sizeof(struct CLR_RT_HeapBlock) == 20)
 #else
 CT_ASSERT(sizeof(struct CLR_RT_HeapBlock) == 12)
-#endif // _WIN64
+#endif
 
 CT_ASSERT(sizeof(CLR_RT_HeapBlock_Raw) == sizeof(struct CLR_RT_HeapBlock))
 
@@ -3920,8 +3951,11 @@ CT_ASSERT(sizeof(CLR_RT_HeapBlock_Raw) == sizeof(struct CLR_RT_HeapBlock))
 #define NANOCLR_TRACE_MEMORY_STATS_EXTRA_SIZE 0
 #endif
 
-#if defined(__GNUC__) // Gcc compiler uses 8 bytes for a function pointer
+#if defined(__GNUC__) && !defined(VIRTUAL_DEVICE) // Gcc compiler uses 8 bytes for a function pointer
 CT_ASSERT(sizeof(CLR_RT_DataTypeLookup) == 20 + NANOCLR_TRACE_MEMORY_STATS_EXTRA_SIZE)
+
+#elif defined(VIRTUAL_DEVICE) && !defined(_WIN32) // GCC/Clang 64-bit: member func ptr is 16 bytes
+CT_ASSERT(sizeof(CLR_RT_DataTypeLookup) == 32 + NANOCLR_TRACE_MEMORY_STATS_EXTRA_SIZE)
 
 #elif defined(VIRTUAL_DEVICE) && defined(NANOCLR_TRACE_MEMORY_STATS)
 
@@ -3949,6 +3983,8 @@ CT_ASSERT(sizeof(CLR_RT_DataTypeLookup) == 16 + NANOCLR_TRACE_MEMORY_STATS_EXTRA
 
 #if defined(_MSC_VER)
 #pragma pack(pop, __NANOCLR_RUNTIME_H__)
+#elif defined(VIRTUAL_DEVICE)
+#pragma pack(pop)
 #endif
 
 extern const CLR_RT_NativeAssemblyData *g_CLR_InteropAssembliesNativeData[];

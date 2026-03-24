@@ -64,7 +64,7 @@
 //
 // This is used in memory move operations.
 //
-#ifdef _WIN64
+#if defined(_WIN64) || (defined(VIRTUAL_DEVICE) && (defined(__LP64__) || defined(__x86_64__) || defined(__aarch64__)))
 struct CLR_RT_HeapBlock_Raw
 {
     CLR_UINT32 data[5];
@@ -74,7 +74,7 @@ struct CLR_RT_HeapBlock_Raw
 {
     CLR_UINT32 data[3];
 };
-#endif // _WIN64
+#endif
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push

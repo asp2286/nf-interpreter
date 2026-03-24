@@ -171,8 +171,13 @@
     cls(cls &);                                                                                                        \
     cls &operator=(const cls &)
 
+#if defined(_MSC_VER)
 #define LONGLONGCONSTANT(v)  (v##I64)
 #define ULONGLONGCONSTANT(v) (v##UI64)
+#else
+#define LONGLONGCONSTANT(v)  (v##ll)
+#define ULONGLONGCONSTANT(v) (v##ull)
+#endif
 #endif
 
 #if defined(PLATFORM_ARM) | defined(PLATFORM_ESP32)
@@ -224,6 +229,29 @@
 #else
 
 #include <nanoHAL_Types.h>
+
+#include <stdio.h>
+#include <stdarg.h>
+#include <string>
+#include <list>
+#include <vector>
+#include <map>
+
+// Windows type compatibility for non-Win32 platforms
+#ifndef LPCSTR
+typedef const char *LPCSTR;
+#endif
+#ifndef LPCWSTR
+typedef const wchar_t *LPCWSTR;
+#endif
+#ifndef UINT64
+typedef uint64_t UINT64;
+#endif
+
+// ARRAYSIZE macro
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(a) (sizeof(a) / sizeof((a)[0]))
+#endif
 
 #ifndef MAKE_HRESULT
 #define MAKE_HRESULT(sev, fac, code)                                                                                   \

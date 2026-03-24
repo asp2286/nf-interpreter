@@ -87,8 +87,13 @@ int hal_vfprintf(COM_HANDLE stream, const char *format, va_list arg);
 int hal_snprintf(char *buffer, size_t len, const char *format, ...);
 int hal_vsnprintf(char *buffer, size_t len, const char *format, va_list arg);
 
+#if defined(_WIN32)
 #define hal_strcpy_s(strDst, sizeInBytes, strSrc)         strcpy_s(strDst, sizeInBytes, strSrc)
 #define hal_strncpy_s(strDst, sizeInBytes, strSrc, count) strncpy_s(strDst, sizeInBytes, strSrc, count)
+#else
+#define hal_strcpy_s(strDst, sizeInBytes, strSrc)         strncpy(strDst, strSrc, sizeInBytes)
+#define hal_strncpy_s(strDst, sizeInBytes, strSrc, count) strncpy(strDst, strSrc, (count) < (sizeInBytes) ? (count) : (sizeInBytes))
+#endif
 #define hal_strlen_s(str)                                 strlen(str)
 #define hal_strncmp_s(str1, str2, num)                    strncmp(str1, str2, num)
 

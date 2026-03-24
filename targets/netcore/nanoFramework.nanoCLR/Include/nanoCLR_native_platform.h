@@ -49,12 +49,48 @@
 typedef int32_t HRESULT;
 #endif
 
+#ifndef S_FALSE
+#define S_FALSE ((HRESULT)1)
+#endif
+
 #ifndef S_OK
 #define S_OK ((HRESULT)0)
 #endif
 
 #ifndef E_FAIL
 #define E_FAIL ((HRESULT)0x80004005)
+#endif
+
+#ifndef SUCCEEDED
+#define SUCCEEDED(Status) ((HRESULT)(Status) >= 0)
+#endif
+
+#ifndef FAILED
+#define FAILED(Status) ((HRESULT)(Status) < 0)
+#endif
+
+#ifndef HRESULT_CODE
+#define HRESULT_CODE(hr) ((hr)&0xFFFF)
+#endif
+
+#ifndef HRESULT_FACILITY
+#define HRESULT_FACILITY(hr) (((hr) >> 16) & 0x1fff)
+#endif
+
+#ifndef HRESULT_SEVERITY
+#define HRESULT_SEVERITY(hr) (((hr) >> 31) & 0x1)
+#endif
+
+#ifndef CLR_UINT8
+typedef uint8_t CLR_UINT8;
+#endif
+
+#ifndef CLR_UINT16
+typedef uint16_t CLR_UINT16;
+#endif
+
+#ifndef CLR_UINT32
+typedef uint32_t CLR_UINT32;
 #endif
 
 #ifndef BOOL
@@ -71,6 +107,67 @@ typedef int BOOL;
 
 #ifndef DWORD
 typedef uint32_t DWORD;
+#endif
+
+#ifndef LONG
+typedef int32_t LONG;
+#endif
+
+#ifndef ULONG
+typedef uint32_t ULONG;
+#endif
+
+#ifndef WORD
+typedef uint16_t WORD;
+#endif
+
+#ifndef BYTE
+typedef uint8_t BYTE;
+#endif
+
+#ifndef UINT
+typedef uint32_t UINT;
+#endif
+
+#ifndef UINT64
+typedef uint64_t UINT64;
+#endif
+
+#ifndef LPCSTR
+typedef const char *LPCSTR;
+#endif
+
+#ifndef LPCWSTR
+typedef const wchar_t *LPCWSTR;
+#endif
+
+#ifndef SEVERITY_SUCCESS
+#define SEVERITY_SUCCESS 0
+#endif
+
+#ifndef SEVERITY_ERROR
+#define SEVERITY_ERROR 1
+#endif
+
+#ifndef MAKE_HRESULT
+#define MAKE_HRESULT(sev, fac, code) \
+    ((HRESULT)(((unsigned long)(sev) << 31) | ((unsigned long)(fac) << 16) | ((unsigned long)(code))))
+#endif
+
+#ifndef __int8
+#define __int8 char
+#endif
+
+#ifndef __int16
+#define __int16 short
+#endif
+
+#ifndef __int32
+#define __int32 int
+#endif
+
+#ifndef __int64
+#define __int64 long long
 #endif
 
 #endif // !_WIN32

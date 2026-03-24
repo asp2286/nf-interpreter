@@ -81,6 +81,8 @@
 
 #if defined(_MSC_VER)
 #pragma pack(push, __NANOCLR_TYPES_H__, 4)
+#elif defined(VIRTUAL_DEVICE)
+#pragma pack(push, 4)
 #endif
 
 enum CLR_OPCODE
@@ -1314,6 +1316,8 @@ struct CLR_RECORD_RESOURCE
 
 #if defined(_MSC_VER)
 #pragma pack(pop, __NANOCLR_TYPES_H__)
+#elif defined(VIRTUAL_DEVICE)
+#pragma pack(pop)
 #endif
 
 #endif // NANOCLR_TYPES_H

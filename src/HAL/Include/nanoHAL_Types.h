@@ -24,8 +24,10 @@
 #endif // defined(__arm) || defined(__GNUC__)
 
 #define ARRAYSIZE_CONST_EXPR(x) (sizeof(x) / sizeof(x[0]))
-#ifndef VIRTUAL_DEVICE
+#if !defined(VIRTUAL_DEVICE) || !defined(_WIN32)
+#ifndef ARRAYSIZE
 #define ARRAYSIZE(x) ARRAYSIZE_CONST_EXPR(x)
+#endif
 #endif
 #define MAXSTRLEN(x)                    (ARRAYSIZE(x) - 1)
 #define ROUNDTOMULTIPLE(x, y)           ((x + sizeof(y) - 1) & ~(sizeof(y) - 1)) // Only works with powers of 2.
@@ -34,7 +36,7 @@
 
 //--//
 
-#ifndef VIRTUAL_DEVICE
+#if !defined(VIRTUAL_DEVICE) || !defined(_WIN32)
 
 typedef struct SYSTEMTIME
 {
@@ -48,6 +50,6 @@ typedef struct SYSTEMTIME
     unsigned short wMilliseconds;
 } SYSTEMTIME;
 
-#endif // VIRTUAL_DEVICE
+#endif // !VIRTUAL_DEVICE || !_WIN32
 
 #endif // HAL_TYPES_H

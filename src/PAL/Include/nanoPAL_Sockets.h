@@ -109,7 +109,10 @@ typedef struct _X509CertData
 typedef unsigned char u_char;
 typedef unsigned short u_short;
 typedef unsigned int u_int;
+#ifdef _WIN32
 typedef unsigned long u_long;
+// u_long is already defined in <sys/types.h> on POSIX as unsigned long (8 bytes on LP64)
+#endif
 typedef unsigned __int64 u_int64;
 //
 //
@@ -269,7 +272,7 @@ typedef struct GNU_PACKED SOCK_in_addr
             u_short s_w1, s_w2;
         } S_un_w;
 
-        u_long S_addr;
+        uint32_t S_addr;
     } S_un;
 } SOCK_in_addr;
 

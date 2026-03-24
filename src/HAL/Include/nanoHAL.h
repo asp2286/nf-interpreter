@@ -890,6 +890,12 @@ extern bool g_fDoNotUninitializeDebuggerPort;
 
 #elif defined(__arm__) | defined(PLATFORM_ESP32)
 // nothing to define here just to help the nanoCLR VS project to build hapilly
+#elif defined(__APPLE__) || defined(__linux__)
+
+#define GLOBAL_LOCK()
+#define GLOBAL_UNLOCK()
+#define ASSERT_IRQ_MUST_BE_ON()
+
 #else
 #error Unsupported platform
 #endif

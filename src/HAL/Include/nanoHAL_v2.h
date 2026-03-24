@@ -30,7 +30,7 @@
 #include "nanoHAL_Boot.h"
 #include <nanoVersion.h>
 
-#if defined(VIRTUAL_DEVICE)
+#if defined(VIRTUAL_DEVICE) && defined(_WIN32)
 #include <crtdbg.h>
 #endif
 
@@ -337,6 +337,11 @@ extern "C"
 
 #ifndef _SIDE_ASSERTE
 #define _SIDE_ASSERTE(expr) (void)(expr)
+#endif
+
+// Enable static_assert for C++11 and later compilers
+#if !defined(STATIC_ASSERT_SUPPORTED) && (__cplusplus >= 201103L || defined(_MSC_VER))
+#define STATIC_ASSERT_SUPPORTED
 #endif
 
 #ifdef STATIC_ASSERT_SUPPORTED

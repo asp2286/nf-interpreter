@@ -9,7 +9,13 @@
 #include <nanoCLR_Application.h>
 #include <target_common.h>
 #include <iostream>
+#if __has_include(<format>) && defined(__cpp_lib_format)
 #include <format>
+#define HAS_STD_FORMAT 1
+#else
+#include <cstdio>
+#define HAS_STD_FORMAT 0
+#endif
 
 //
 // UNDONE: Feature configuration
@@ -172,6 +178,7 @@ const char *nanoCLR_GetVersion()
 
     if (pszVersion != nullptr)
     {
+#if HAS_STD_FORMAT
         const auto result = std::format_to_n(
             buffer,
             std::size(buffer) - 1,
@@ -181,10 +188,21 @@ const char *nanoCLR_GetVersion()
             VERSION_BUILD,
             VERSION_REVISION);
         *result.out = '\0';
-
-        const std::string_view str{buffer, result.out};
-
         std::memcpy(pszVersion, buffer, result.size + 1);
+#else
+        int len = std::snprintf(
+            buffer,
+            std::size(buffer),
+            "%d.%d.%d.%d",
+            VERSION_MAJOR,
+            VERSION_MINOR,
+            VERSION_BUILD,
+            VERSION_REVISION);
+        if (len > 0)
+        {
+            std::memcpy(pszVersion, buffer, static_cast<size_t>(len) + 1);
+        }
+#endif
     }
 
     return pszVersion;

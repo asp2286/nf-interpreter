@@ -8,24 +8,36 @@
 
 // #include <nanoHAL_Power.h>
 
+#ifdef _WIN32
 #define PLATFORM_DELAY(milliSecs) Sleep(milliSecs);
+#else
+#include <unistd.h>
+#define PLATFORM_DELAY(milliSecs) usleep((milliSecs) * 1000);
+#endif
 
 // set min possible number of sockets
 #define PLATFORM_DEPENDENT__SOCKETS_MAX_COUNT 1
 
-#if defined(VIRTUAL_DEVICE)
+#if defined(VIRTUAL_DEVICE) && defined(_WIN32)
 #define NANOCLR_STOP() ::DebugBreak()
 #pragma warning(error : 4706) // error C4706: assignment within conditional expression
+#elif defined(VIRTUAL_DEVICE)
+#include <csignal>
+#define NANOCLR_STOP() raise(SIGTRAP)
 #endif
 
 #if !defined(BUILD_RTM)
 
-inline void __cdecl HARD_Breakpoint()
+inline void HARD_Breakpoint()
 {
+#ifdef _WIN32
     if (::IsDebuggerPresent())
     {
         ::DebugBreak();
     }
+#else
+    raise(SIGTRAP);
+#endif
 }
 
 #define HARD_BREAKPOINT() HARD_Breakpoint()
@@ -34,17 +46,6 @@ inline bool Target_ConfigUpdateRequiresErase()
 {
     return true;
 }
-
-// #if defined(_DEBUG)
-// #define DEBUG_HARD_BREAKPOINT()     HARD_Breakpoint()
-// #else
-// #define DEBUG_HARD_BREAKPOINT()
-// #endif
-
-// #else
-
-// #define HARD_BREAKPOINT()
-// #define DEBUG_HARD_BREAKPOINT()
 
 #endif // !defined(BUILD_RTM)
 
@@ -95,12 +96,12 @@ inline uint32_t CPU_TicksPerSecond()
     return 100000000;
 }
 
-inline uint64_t CPU_MicrosecondsToTicks(UINT64 uSec)
+inline uint64_t CPU_MicrosecondsToTicks(uint64_t uSec)
 {
     return uSec * 10;
 }
 
-inline uint64_t CPU_MillisecondsToTicks(UINT64 uSec)
+inline uint64_t CPU_MillisecondsToTicks(uint64_t uSec)
 {
     return uSec * 10 * 1000;
 }
