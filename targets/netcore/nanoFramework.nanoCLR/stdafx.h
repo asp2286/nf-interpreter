@@ -9,22 +9,24 @@
 
 #pragma once
 
+// Cross-platform compatibility layer (must come first — defines HRESULT, BOOL, etc. on POSIX)
+#include "Include/nanoCLR_native_platform.h"
+
+#ifdef _WIN32
 #include "targetver.h"
+#include <tchar.h>
+#include <crtdbg.h>
+#pragma comment(lib, "kernel32.lib")
+#endif
 
 #include <stdio.h>
-#include <tchar.h>
-
-#include <Windows.h>
 #include <mutex>
 
 // TODO: reference additional headers your program requires here
 
-#include <crtdbg.h>
 #include <nanoCLR_Runtime.h>
 #include <nanoCLR_Hardware.h>
 #include <nanoCLR_Application.h>
 #include <base64.h>
 
 #include "nanoCLR_ParseOptions.h"
-
-#pragma comment(lib, "kernel32.lib")

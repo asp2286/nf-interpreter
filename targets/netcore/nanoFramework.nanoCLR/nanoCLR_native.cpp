@@ -17,6 +17,7 @@
 
 #define NF_CLR_FEATURE_ALL
 
+#ifdef _MSC_VER
 #if defined(NF_CLR_FEATURE_ALL)
 
 #pragma comment(lib, "WireProtocol.lib")
@@ -43,6 +44,7 @@
 #pragma comment(lib, "Serialization_stub.lib")
 
 #endif
+#endif // _MSC_VER
 
 DebugPrintCallback gDebugPrintCallback = NULL;
 
@@ -90,7 +92,7 @@ void nanoCLR_Run(NANO_CLR_SETTINGS nanoClrSettings)
 
 #if _DEBUG
     // only show this in debug build
-    DWORD pid = GetCurrentProcessId();
+    auto pid = NANOCLR_GET_PID();
     CLR_Debug::Printf("Process ID: %d\r\n", pid);
 #endif
 
@@ -110,7 +112,7 @@ void nanoCLR_Run(NANO_CLR_SETTINGS nanoClrSettings)
     BlockStorageList_InitializeDevices();
 
     CLR_SETTINGS clrSettings;
-    ZeroMemory(&clrSettings, sizeof(CLR_SETTINGS));
+    NANOCLR_ZERO_MEMORY(&clrSettings, sizeof(CLR_SETTINGS));
 
     clrSettings.MaxContextSwitches = nanoClrSettings.MaxContextSwitches;
     clrSettings.WaitForDebugger = nanoClrSettings.WaitForDebugger;
@@ -166,7 +168,7 @@ const char *nanoCLR_GetVersion()
     char buffer[128];
 
     char *pszVersion = nullptr;
-    pszVersion = (char *)CoTaskMemAlloc(std::size(buffer));
+    pszVersion = (char *)NANOCLR_ALLOC(std::size(buffer));
 
     if (pszVersion != nullptr)
     {

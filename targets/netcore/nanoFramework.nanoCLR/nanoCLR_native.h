@@ -5,11 +5,9 @@
 
 #pragma once
 
-#ifdef NANOCLRNATIVE_EXPORTS
-#define NANOCLRNATIVE_API __declspec(dllexport)
-#else
-#define NANOCLRNATIVE_API __declspec(dllimport)
-#endif
+#include "Include/nanoCLR_native_platform.h"
+
+#define NANOCLRNATIVE_API NANOCLR_API
 
 typedef struct NANO_CLR_SETTINGS
 {
