@@ -128,7 +128,7 @@ jobs:
 
     steps:
       - checkout: self
-        fetchDepth: 1
+        fetchDepth: 0  # Nerdbank.GitVersioning requires full history to calculate version height
 
       - task: UseDotNet@2
         displayName: Use .NET 8
