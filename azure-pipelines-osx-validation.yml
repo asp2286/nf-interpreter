@@ -176,10 +176,10 @@ jobs:
       - bash: |
           set -euo pipefail
 
-          # Find CLI output directory
+          # Find CLI output in bin/ (not obj/ref which is a reference assembly)
           CLI_DLL=$(find targets/netcore \
               -name "nanoFramework.nanoCLR.CLI.dll" \
-              -path "*/Debug/*" | head -1)
+              -path "*/bin/Debug/*" | head -1)
           CLI_DIR=$(dirname "$CLI_DLL")
           echo "CLI dir: $CLI_DIR"
 
@@ -196,7 +196,7 @@ jobs:
 
           CLI_DLL=$(find targets/netcore \
               -name "nanoFramework.nanoCLR.CLI.dll" \
-              -path "*/Debug/*" | head -1)
+              -path "*/bin/Debug/*" | head -1)
           echo "Running: $CLI_DLL"
 
           # Run with trace to see which library is loaded
