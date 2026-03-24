@@ -258,23 +258,14 @@ jobs:
           # Smoke exe (raw C++ binary for quick native testing)
           cp "$(Pipeline.Workspace)/osx_build/bin/nanoFramework.nanoCLR" "$STAGING/"
 
-          cat > "$STAGING/README.md" <<'EOF'
-          # nanoCLR macOS x64
-
-          Built by CI.
-
-          ## Run
-
-          ```bash
-          dotnet nanoFramework.nanoCLR.CLI.dll instance --getversion
-          ```
-
-          ## Contents
-
-          - `nanoFramework.nanoCLR.dylib`   native CLR library (macOS x64)
-          - `nanoFramework.nanoCLR.CLI.dll` dotnet CLI tool
-          - `nanoFramework.nanoCLR`         standalone C++ smoke exe
-          EOF
+          printf '# nanoCLR macOS x64\n\n' > "$STAGING/README.md"
+          printf 'Built by CI.\n\n' >> "$STAGING/README.md"
+          printf '## Run\n\n' >> "$STAGING/README.md"
+          printf '    dotnet nanoFramework.nanoCLR.CLI.dll instance --getversion\n\n' >> "$STAGING/README.md"
+          printf '## Contents\n\n' >> "$STAGING/README.md"
+          printf '- nanoFramework.nanoCLR.dylib    native CLR library (macOS x64)\n' >> "$STAGING/README.md"
+          printf '- nanoFramework.nanoCLR.CLI.dll  dotnet CLI tool\n' >> "$STAGING/README.md"
+          printf '- nanoFramework.nanoCLR          standalone C++ smoke exe\n' >> "$STAGING/README.md"
 
           echo "Staged files:"
           ls -lh "$STAGING"
@@ -285,5 +276,162 @@ jobs:
         inputs:
           targetPath: staging/nanoCLR-osx-x64
           artifactName: nanoCLR-osx-x64
+          artifactType: pipeline
+
+  ##############################
+  # Job 3 — Build targets/osx arm64 (Apple Silicon)
+  - job: Build_OSX_arm64
+    displayName: "Build targets/osx (arm64 / Apple Silicon)"
+    pool:
+      vmImage: "macos-15"
+
+    steps:
+      - checkout: self
+        fetchDepth: 1
+
+      - bash: |
+          if ! command -v ninja >/dev/null 2>&1; then
+            brew install ninja
+          fi
+          echo "Ninja: $(ninja --version)"
+          echo "CMake: $(cmake --version | head -1)"
+          echo "Clang: $(clang++ --version | head -1)"
+          echo "Arch:  $(uname -m)"
+        displayName: Show tool versions
+
+      - bash: |
+          set -euo pipefail
+          # Force arm64 regardless of agent arch (cross-compile if needed)
+          cmake -S targets/osx \
+                -B build/osx-arm64 \
+                -G Ninja \
+                -DNANO_OSX_ARCH="arm64" \
+                -DCMAKE_OSX_ARCHITECTURES="arm64" \
+                -DNANO_OSX_ENABLE_SMOKE=ON \
+                -DBUILD_VERSION="1.0.0.0" \
+                --fresh
+        displayName: CMake Configure (arm64)
+
+      - bash: |
+          set -euo pipefail
+          cmake --build build/osx-arm64 --verbose
+        displayName: CMake Build (arm64)
+
+      - bash: |
+          set -euo pipefail
+          DYLIB=$(find build/osx-arm64 -name "nanoFramework.nanoCLR.dylib" | head -1)
+          echo "Arch check:"
+          file "$DYLIB"
+          lipo -info "$DYLIB"
+
+          echo ""
+          echo "=== Checking P/Invoke exports ==="
+          REQUIRED_SYMBOLS=(
+            "nanoCLR_Run"
+            "nanoCLR_LoadAssembly"
+            "nanoCLR_GetVersion"
+          )
+          for SYM in "${REQUIRED_SYMBOLS[@]}"; do
+            if nm -gU "$DYLIB" | grep -q "$SYM"; then
+              echo "  ✓ $SYM"
+            else
+              echo "  ✗ $SYM  <-- MISSING"
+              exit 1
+            fi
+          done
+        displayName: Verify arm64 dylib
+
+      - task: PublishPipelineArtifact@1
+        condition: always()
+        displayName: Upload arm64 build artifacts
+        inputs:
+          targetPath: build/osx-arm64
+          artifactName: osx_build_arm64
+          artifactType: pipeline
+
+  ##############################
+  # Job 4 — Universal binary (x64 + arm64 fat dylib)
+  - job: Package_universal
+    displayName: "Package nanoCLR-osx universal (fat binary)"
+    dependsOn:
+      - Build_OSX_arm64
+      - Test_dotnet_tool
+    pool:
+      vmImage: "macos-15"
+
+    steps:
+      - task: DownloadPipelineArtifact@2
+        displayName: Download x64 build
+        inputs:
+          artifactName: osx_build
+          targetPath: $(Pipeline.Workspace)/osx_build_x64
+
+      - task: DownloadPipelineArtifact@2
+        displayName: Download arm64 build
+        inputs:
+          artifactName: osx_build_arm64
+          targetPath: $(Pipeline.Workspace)/osx_build_arm64
+
+      - task: DownloadPipelineArtifact@2
+        displayName: Download dotnet tool dlls
+        inputs:
+          artifactName: nanoCLR-osx-x64
+          targetPath: $(Pipeline.Workspace)/nanoCLR-osx-x64
+
+      - bash: |
+          set -euo pipefail
+
+          DYLIB_X64=$(find $(Pipeline.Workspace)/osx_build_x64 \
+              -name "nanoFramework.nanoCLR.dylib" | head -1)
+          DYLIB_ARM64=$(find $(Pipeline.Workspace)/osx_build_arm64 \
+              -name "nanoFramework.nanoCLR.dylib" | head -1)
+
+          echo "x64   dylib: $(file $DYLIB_X64)"
+          echo "arm64 dylib: $(file $DYLIB_ARM64)"
+
+          lipo -create "$DYLIB_X64" "$DYLIB_ARM64" \
+               -output nanoFramework.nanoCLR.universal.dylib
+
+          echo ""
+          echo "Universal dylib:"
+          lipo -info nanoFramework.nanoCLR.universal.dylib
+          file nanoFramework.nanoCLR.universal.dylib
+          ls -lh nanoFramework.nanoCLR.universal.dylib
+        displayName: lipo — create universal fat dylib
+
+      - bash: |
+          set -euo pipefail
+
+          STAGING="$(pwd)/staging/nanoCLR-osx"
+          mkdir -p "$STAGING"
+
+          # C# tool dlls (managed — platform neutral)
+          cp -r "$(Pipeline.Workspace)/nanoCLR-osx-x64"/. "$STAGING/"
+
+          # Replace x64 dylib with universal fat binary
+          cp nanoFramework.nanoCLR.universal.dylib \
+             "$STAGING/nanoFramework.nanoCLR.dylib"
+
+          echo "Universal dylib in staging:"
+          lipo -info "$STAGING/nanoFramework.nanoCLR.dylib"
+
+          printf '# nanoCLR macOS Universal (x86_64 + arm64)\n\n' > "$STAGING/README.md"
+          printf 'Built by CI. Works on Intel and Apple Silicon Macs.\n\n' >> "$STAGING/README.md"
+          printf '## Run\n\n' >> "$STAGING/README.md"
+          printf '    dotnet nanoFramework.nanoCLR.CLI.dll instance --getversion\n\n' >> "$STAGING/README.md"
+          printf '## Contents\n\n' >> "$STAGING/README.md"
+          printf '- nanoFramework.nanoCLR.dylib    universal fat binary (x86_64 + arm64)\n' >> "$STAGING/README.md"
+          printf '- nanoFramework.nanoCLR.CLI.dll  dotnet CLI tool\n' >> "$STAGING/README.md"
+          printf '- nanoFramework.nanoCLR.Host.dll CLR host library\n' >> "$STAGING/README.md"
+
+          echo "Staged files:"
+          ls -lh "$STAGING"
+        displayName: Stage universal artifacts
+
+      - task: PublishPipelineArtifact@1
+        displayName: Publish nanoCLR-osx (universal)
+        inputs:
+          targetPath: staging/nanoCLR-osx
+          artifactName: nanoCLR-osx
           artifactType: pipeline
           
