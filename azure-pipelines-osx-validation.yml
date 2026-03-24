@@ -149,13 +149,29 @@ jobs:
 
       - bash: |
           set -euo pipefail
-          cd targets/netcore
-          dotnet restore nanoCLR.sln --verbosity minimal
-          dotnet build nanoCLR.sln \
+
+          # Build only the C# projects — the .sln also contains .vcxproj
+          # files which require MSVC and cannot build on macOS.
+          dotnet restore \
+              targets/netcore/nanoFramework.nanoCLR.Host/nanoFramework.nanoCLR.Host.csproj \
+              --verbosity minimal
+
+          dotnet restore \
+              targets/netcore/nanoFramework.nanoCLR.CLI/nanoFramework.nanoCLR.CLI.csproj \
+              --verbosity minimal
+
+          dotnet build \
+              targets/netcore/nanoFramework.nanoCLR.Host/nanoFramework.nanoCLR.Host.csproj \
               --configuration Debug \
               --no-restore \
               --verbosity minimal
-        displayName: Build dotnet nanoclr tool
+
+          dotnet build \
+              targets/netcore/nanoFramework.nanoCLR.CLI/nanoFramework.nanoCLR.CLI.csproj \
+              --configuration Debug \
+              --no-restore \
+              --verbosity minimal
+        displayName: Build dotnet nanoclr tool (C# only)
 
       - bash: |
           set -euo pipefail
