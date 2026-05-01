@@ -121,6 +121,253 @@ set(NANOCLR_SRC_SOURCES
 )
 
 # ---------------------------------------------------------------------------
+# Sources for libraries previously linked as static .lib via project
+# references in nanoFramework.nanoCLR.vcxproj. We compile them straight
+# into the DLL so we don't need to build/install separate .lib files.
+#
+# Mirrors the <ClCompile> entries in each *.vcxproj. Stub variants
+# (Debugger_stub, Hardware_stub, Messaging_stub, RPC_stub,
+# Diagnostics_stub, InterruptHandler_stub, NativeEventDispatcher_stub,
+# Serialization_stub, FileStream_stub) are intentionally NOT included:
+# in nanoCLR_native.cpp the "FEATURE_ALL" branch links the real libs,
+# and the vcxproj marks the stub references with
+# LinkLibraryDependencies=false.
+# ---------------------------------------------------------------------------
+
+# CLR Core (src/CLR/Core/Core.vcxproj) — minus NativeEventDispatcher.cpp,
+# already in NANOCLR_SRC_SOURCES above.
+set(NANOCLR_CLR_CORE_SOURCES
+    ${REPO_ROOT}/src/CLR/Helpers/nanoprintf/nanoprintf.c
+    ${REPO_ROOT}/src/CLR/Core/Cache.cpp
+    ${REPO_ROOT}/src/CLR/Core/Checks.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_DblLinkedList.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_Array.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_ArrayList.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_BinaryBlob.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_Delegate.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_Delegate_List.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_Finalizer.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_Lock.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_LockRequest.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_Node.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_Queue.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_Stack.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_String.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_Timer.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapBlock_WaitForObject.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_HeapCluster.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_Interop.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_Memory.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_ObjectToEvent_Destination.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_ObjectToEvent_Source.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_RuntimeMemory.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_StackFrame.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_SystemAssembliesTable.cpp
+    ${REPO_ROOT}/src/CLR/Core/CLR_RT_UnicodeHelper.cpp
+    ${REPO_ROOT}/src/CLR/Core/Core.cpp
+    ${REPO_ROOT}/src/CLR/Core/Execution.cpp
+    ${REPO_ROOT}/src/CLR/Core/GarbageCollector.cpp
+    ${REPO_ROOT}/src/CLR/Core/GarbageCollector_Compaction.cpp
+    ${REPO_ROOT}/src/CLR/Core/GarbageCollector_ComputeReachabilityGraph.cpp
+    ${REPO_ROOT}/src/CLR/Core/GarbageCollector_Info.cpp
+    ${REPO_ROOT}/src/CLR/Core/Interpreter.cpp
+    ${REPO_ROOT}/src/CLR/Core/nanoSupport_CRC32.c
+    ${REPO_ROOT}/src/CLR/Core/Streams.cpp
+    ${REPO_ROOT}/src/CLR/Core/StringTable.cpp
+    ${REPO_ROOT}/src/CLR/Core/Thread.cpp
+    ${REPO_ROOT}/src/CLR/Core/TypeSystem.cpp
+    ${REPO_ROOT}/src/CLR/Core/TypeSystemLookup.cpp
+    ${REPO_ROOT}/src/CLR/Core/Various.cpp
+)
+
+# CLR static-lib companions (vcxproj per folder, all linked when
+# NF_CLR_FEATURE_ALL is set).
+set(NANOCLR_CLR_LIB_SOURCES
+    ${REPO_ROOT}/src/CLR/Debugger/Debugger.cpp
+    ${REPO_ROOT}/src/CLR/Debugger/Debugger_full.cpp
+    ${REPO_ROOT}/src/CLR/Diagnostics/Info.cpp
+    ${REPO_ROOT}/src/CLR/Diagnostics/Info_Safeprintf.cpp
+    ${REPO_ROOT}/src/CLR/Diagnostics/Profile.cpp
+    ${REPO_ROOT}/src/CLR/Diagnostics/Profiler.cpp
+    ${REPO_ROOT}/src/CLR/Messaging/Messaging.cpp
+    # targetHAL_time.cpp provides an extern "C" stub for
+    # HAL_Time_CurrentSysTicks needed by the .c WireProtocol files.
+    # The matching C++ definition (real impl) lives in
+    # targets/win32/nanoCLR/targetHAL_Time.cpp — different linkage,
+    # different mangled name, both are required.
+    ${REPO_ROOT}/src/CLR/WireProtocol/targetHAL_time.cpp
+    ${REPO_ROOT}/src/CLR/WireProtocol/WireProtocol_App_Interface.c
+    # WireProtocol_HAL_Interface.c is intentionally NOT included — the
+    # local netcore WireProtocol_HAL_Interface.cpp already provides the
+    # WP_* symbols (with the actual host-side implementations using the
+    # WireProtocolReceiveCallback / WireProtocolTransmitCallback hooks).
+    ${REPO_ROOT}/src/CLR/WireProtocol/WireProtocol_Message.c
+    ${REPO_ROOT}/src/CLR/WireProtocol/WireProtocol_MonitorCommands.c
+    ${REPO_ROOT}/src/CLR/Core/Hardware/Hardware.cpp
+    ${REPO_ROOT}/src/CLR/Core/InterruptHandler/InterruptHandler.cpp
+    ${REPO_ROOT}/src/CLR/Core/RPC/CLR_RT_HeapBlock_EndPoint.cpp
+    ${REPO_ROOT}/src/CLR/Core/Serialization/BinaryFormatter.cpp
+    ${REPO_ROOT}/src/CLR/Core/FileStream/FileStream.cpp
+    ${REPO_ROOT}/src/CLR/Startup/CLRStartup.cpp
+    ${REPO_ROOT}/src/CLR/System.Math/nf_native_system_math.cpp
+    ${REPO_ROOT}/src/CLR/System.Math/nf_native_system_math_System_Math.cpp
+)
+
+# CorLib (src/CLR/CorLib/CorLib.vcxproj).
+set(NANOCLR_CLR_CORLIB_SOURCES
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_AppDomain.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Array.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Attribute.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_BitConverter.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Collections_ArrayList.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Convert.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_DateTime.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Delegate.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Diagnostics_Debug.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Diagnostics_Debugger.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Double.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Enum.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Exception.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_GC.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Globalization_CultureInfo.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Globalization_DateTimeFormat.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Guid.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_MarshalByRefObject.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_MathInternal.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_MulticastDelegate.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Number.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Object.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Random.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Reflection_Assembly.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Reflection_Binder.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Reflection_ConstructorInfo.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Reflection_FieldInfo.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Reflection_MemberInfo.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Reflection_MethodBase.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Reflection_PropertyInfo.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Reflection_RuntimeFieldInfo.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Reflection_RuntimeMethodInfo.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_RuntimeType.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Runtime_CompilerServices_RuntimeHelpers.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Runtime_Remoting_RemotingServices.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_String.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Threading_AutoResetEvent.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Threading_Interlocked.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Threading_ManualResetEvent.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Threading_Monitor.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Threading_SpinWait.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Threading_Thread.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Threading_Timer.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Threading_WaitHandle.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_TimeSpan.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_Type.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_ValueType.cpp
+    ${REPO_ROOT}/src/CLR/CorLib/corlib_native_System_WeakReference.cpp
+)
+
+# nanoFramework / DeviceInterfaces / System.* sources, mirroring the
+# remaining ProjectReference entries in nanoFramework.nanoCLR.vcxproj.
+set(NANOCLR_FRAMEWORK_SOURCES
+    # Networking.Sntp (stubs-only variant referenced by netcore vcxproj)
+    ${REPO_ROOT}/src/DeviceInterfaces/Networking.Sntp/nf_networking_sntp.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/Networking.Sntp/nf_networking_sntp_nanoFramework_Networking_Sntp_stubs.cpp
+
+    # System.Net (stubs-only variant)
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native_System_Net_IPAddress_stubs.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native_System_Net_NetworkInformation_IPGlobalProperties_stubs.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native_System_Net_NetworkInformation_NetworkInterface_stubs.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native_System_Net_NetworkInformation_Wireless80211Configuration_stubs.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native_System_Net_NetworkInformation_WirelessAPConfiguration_stubs.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native_System_Net_Security_CertificateManager_stubs.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native_System_Net_Security_SslNative_stubs.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native_System_Net_Sockets_NativeSocket_stubs.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native_System_Security_Cryptography_X509Certificates_X509Certificate2_stubs.cpp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net/sys_net_native_System_Security_Cryptography_X509Certificates_X509Certificate_stubs.cpp
+
+    # nanoFramework.ResourceManager
+    ${REPO_ROOT}/src/nanoFramework.ResourceManager/nf_system_resourcemanager.cpp
+    ${REPO_ROOT}/src/nanoFramework.ResourceManager/nf_system_resourcemanager_System_Resources_ResourceManager.cpp
+    ${REPO_ROOT}/src/nanoFramework.ResourceManager/nf_system_resourcemanager_nanoFramework_Runtime_Native_ResourceUtility.cpp
+
+    # nanoFramework.Runtime.Native
+    ${REPO_ROOT}/src/nanoFramework.Runtime.Native/nf_rt_native.cpp
+    ${REPO_ROOT}/src/nanoFramework.Runtime.Native/nf_rt_native_System_Environment.cpp
+    ${REPO_ROOT}/src/nanoFramework.Runtime.Native/nf_rt_native_nanoFramework_Runtime_Hardware_SystemInfo.cpp
+    ${REPO_ROOT}/src/nanoFramework.Runtime.Native/nf_rt_native_nanoFramework_Runtime_Native_ExecutionConstraint.cpp
+    ${REPO_ROOT}/src/nanoFramework.Runtime.Native/nf_rt_native_nanoFramework_Runtime_Native_GC.cpp
+    ${REPO_ROOT}/src/nanoFramework.Runtime.Native/nf_rt_native_nanoFramework_Runtime_Native_Power.cpp
+    ${REPO_ROOT}/src/nanoFramework.Runtime.Native/nf_rt_native_nanoFramework_Runtime_Native_Rtc_stubs.cpp
+
+    # nanoFramework.System.Collections
+    ${REPO_ROOT}/src/nanoFramework.System.Collections/nf_system_collections.cpp
+    ${REPO_ROOT}/src/nanoFramework.System.Collections/nf_system_collections_System_Collections_Hashtable.cpp
+    ${REPO_ROOT}/src/nanoFramework.System.Collections/nf_system_collections_System_Collections_Hashtable__HashtableEnumerator.cpp
+    ${REPO_ROOT}/src/nanoFramework.System.Collections/nf_system_collections_System_Collections_Queue.cpp
+    ${REPO_ROOT}/src/nanoFramework.System.Collections/nf_system_collections_System_Collections_Stack.cpp
+
+    # nanoFramework.System.IO.Hashing
+    ${REPO_ROOT}/src/nanoFramework.System.IO.Hashing/nf_sys_io_hashing.cpp
+    ${REPO_ROOT}/src/nanoFramework.System.IO.Hashing/nf_sys_io_hashing_System_IO_Hashing_Crc32_stubs.cpp
+
+    # nanoFramework.System.Text
+    ${REPO_ROOT}/src/nanoFramework.System.Text/nf_system_text.cpp
+    ${REPO_ROOT}/src/nanoFramework.System.Text/nf_system_text_System_Text_UTF8Decoder.cpp
+    ${REPO_ROOT}/src/nanoFramework.System.Text/nf_system_text_System_Text_UTF8Encoding.cpp
+
+    # System.Device.Gpio (stubs-only variant)
+    ${REPO_ROOT}/src/System.Device.Gpio/sys_dev_gpio_native.cpp
+    ${REPO_ROOT}/src/System.Device.Gpio/sys_dev_gpio_native_System_Device_Gpio_GpioController_stubs.cpp
+    ${REPO_ROOT}/src/System.Device.Gpio/sys_dev_gpio_native_System_Device_Gpio_GpioPin_stubs.cpp
+
+    # System.Device.I2c (stubs-only variant)
+    ${REPO_ROOT}/src/System.Device.I2c/sys_dev_i2c_native.cpp
+    ${REPO_ROOT}/src/System.Device.I2c/sys_dev_i2c_native_System_Device_I2c_I2cDevice_stubs.cpp
+
+    # System.Device.Spi (stubs-only variant)
+    ${REPO_ROOT}/src/System.Device.Spi/sys_dev_spi_native.cpp
+    ${REPO_ROOT}/src/System.Device.Spi/sys_dev_spi_native_System_Device_Spi_SpiBusInfo_stubs.cpp
+    ${REPO_ROOT}/src/System.Device.Spi/sys_dev_spi_native_System_Device_Spi_SpiDevice_stubs.cpp
+
+    # System.IO.FileSystem (real variant — netcore-only)
+    ${REPO_ROOT}/src/System.IO.FileSystem/nf_sys_io_filesystem.cpp
+    ${REPO_ROOT}/src/System.IO.FileSystem/nf_sys_io_filesystem_nanoFramework_System_IO_FileSystem_SDCard_stubs.cpp
+    ${REPO_ROOT}/src/System.IO.FileSystem/nf_sys_io_filesystem_System_IO_Directory.cpp
+    ${REPO_ROOT}/src/System.IO.FileSystem/nf_sys_io_filesystem_System_IO_DriveInfo.cpp
+    ${REPO_ROOT}/src/System.IO.FileSystem/nf_sys_io_filesystem_System_IO_NativeFileStream.cpp
+    ${REPO_ROOT}/src/System.IO.FileSystem/nf_sys_io_filesystem_System_IO_NativeFindFile.cpp
+    ${REPO_ROOT}/src/System.IO.FileSystem/nf_sys_io_filesystem_System_IO_NativeIO.cpp
+
+    # System.IO.Ports (stubs-only variant)
+    ${REPO_ROOT}/src/System.IO.Ports/sys_io_ser_native.cpp
+    ${REPO_ROOT}/src/System.IO.Ports/sys_io_ser_native_System_IO_Ports_SerialPort_stubs.cpp
+
+    # System.Runtime.Serialization
+    ${REPO_ROOT}/src/System.Runtime.Serialization/nf_system_runtime_serialization.cpp
+    ${REPO_ROOT}/src/System.Runtime.Serialization/nf_system_runtime_serialization_System_Runtime_Serialization_Formatters_Binary_BinaryFormatter.cpp
+)
+
+# littlefs (targets/netcore/littlefs/littlefs.vcxproj). The two lfs.c
+# files come from the external clone pointed to by LITTLEFS_PATH.
+set(NANOCLR_LITTLEFS_SOURCES
+    ${REPO_ROOT}/targets/netcore/littlefs/hal_littlefs.c
+    ${REPO_ROOT}/targets/netcore/littlefs/littlefs_FS_Driver.cpp
+)
+if(DEFINED LITTLEFS_PATH)
+    list(APPEND NANOCLR_LITTLEFS_SOURCES
+        ${LITTLEFS_PATH}/lfs.c
+        ${LITTLEFS_PATH}/lfs_util.c
+    )
+endif()
+
+set_source_files_properties(
+    ${REPO_ROOT}/src/CLR/WireProtocol/targetHAL_time.cpp
+    PROPERTIES SKIP_PRECOMPILE_HEADERS ON
+)
+
+# ---------------------------------------------------------------------------
 # SHARED library target — produces:
 #   Windows: nanoFramework.nanoCLR.dll
 #   macOS:   nanoFramework.nanoCLR.dylib
@@ -130,6 +377,11 @@ add_library(nanoFramework.nanoCLR SHARED
     ${NANOCLR_NETCORE_LOCAL_SOURCES}
     ${NANOCLR_WIN32_SHARED_SOURCES}
     ${NANOCLR_SRC_SOURCES}
+    ${NANOCLR_CLR_CORE_SOURCES}
+    ${NANOCLR_CLR_LIB_SOURCES}
+    ${NANOCLR_CLR_CORLIB_SOURCES}
+    ${NANOCLR_FRAMEWORK_SOURCES}
+    ${NANOCLR_LITTLEFS_SOURCES}
 )
 
 set_target_properties(nanoFramework.nanoCLR PROPERTIES
@@ -164,10 +416,42 @@ target_include_directories(nanoFramework.nanoCLR PRIVATE
     ${REPO_ROOT}/src/CLR/Core
     ${REPO_ROOT}/src/CLR/CorLib
     ${REPO_ROOT}/src/CLR/Helpers/Base64
+    ${REPO_ROOT}/src/CLR/Helpers/nanoprintf
     ${REPO_ROOT}/src/CLR/Include
     ${REPO_ROOT}/src/HAL/Include
     ${REPO_ROOT}/src/PAL/Include
     ${REPO_ROOT}/src/nanoFramework.Runtime.Events
+
+    # Headers from each previously-static-lib folder. Each lib compiled
+    # in isolation in MSBuild, so its .cpp files include their own
+    # headers via a bare path (e.g. "Hardware.h"). When we compile the
+    # same .cpp files from the root target, we have to put these dirs
+    # on the include path.
+    ${REPO_ROOT}/src/CLR/Debugger
+    ${REPO_ROOT}/src/CLR/Diagnostics
+    ${REPO_ROOT}/src/CLR/Messaging
+    ${REPO_ROOT}/src/CLR/Startup
+    ${REPO_ROOT}/src/CLR/System.Math
+    ${REPO_ROOT}/src/CLR/WireProtocol
+    ${REPO_ROOT}/src/CLR/Core/FileStream
+    ${REPO_ROOT}/src/CLR/Core/Hardware
+    ${REPO_ROOT}/src/CLR/Core/InterruptHandler
+    ${REPO_ROOT}/src/CLR/Core/NativeEventDispatcher
+    ${REPO_ROOT}/src/CLR/Core/RPC
+    ${REPO_ROOT}/src/CLR/Core/Serialization
+    ${REPO_ROOT}/src/DeviceInterfaces/Networking.Sntp
+    ${REPO_ROOT}/src/DeviceInterfaces/System.Net
+    ${REPO_ROOT}/src/nanoFramework.ResourceManager
+    ${REPO_ROOT}/src/nanoFramework.Runtime.Native
+    ${REPO_ROOT}/src/nanoFramework.System.Collections
+    ${REPO_ROOT}/src/nanoFramework.System.IO.Hashing
+    ${REPO_ROOT}/src/nanoFramework.System.Text
+    ${REPO_ROOT}/src/System.Device.Gpio
+    ${REPO_ROOT}/src/System.Device.I2c
+    ${REPO_ROOT}/src/System.Device.Spi
+    ${REPO_ROOT}/src/System.IO.FileSystem
+    ${REPO_ROOT}/src/System.IO.Ports
+    ${REPO_ROOT}/src/System.Runtime.Serialization
 
     # littlefs — local config header + external repo
     ${REPO_ROOT}/targets/netcore/littlefs
@@ -189,6 +473,7 @@ target_compile_definitions(nanoFramework.nanoCLR PRIVATE
     NANOCLR_REFLECTION=TRUE
     NANOCLR_SYSTEM_COLLECTIONS=TRUE
     _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+    LFS_CONFIG=lfs_config.h
     VERSION_MAJOR=${NBGV_VERSION_MAJOR}
     VERSION_MINOR=${NBGV_VERSION_MINOR}
     VERSION_BUILD=${NBGV_BUILD_NUMBER}
@@ -225,10 +510,29 @@ if(MSVC)
         $<$<NOT:$<CONFIG:Debug>>:/OPT:REF>   # OptimizeReferences
         $<$<NOT:$<CONFIG:Debug>>:/LTCG>      # Link-time code generation
         $<$<CONFIG:Debug>:/INCREMENTAL>      # Debug incremental linking
+
+        # nanoCLR_native.cpp uses #pragma comment(lib, "<Name>.lib") to pull in
+        # the static libs that the MSBuild solution builds via project
+        # references. In this CMake build we compile the same sources directly
+        # into the DLL instead, so tell the linker to ignore those default-lib
+        # directives.
+        /NODEFAULTLIB:WireProtocol.lib
+        /NODEFAULTLIB:Debugger.lib
+        /NODEFAULTLIB:Diagnostics.lib
+        /NODEFAULTLIB:Hardware.lib
+        /NODEFAULTLIB:InterruptHandler.lib
+        /NODEFAULTLIB:Messaging.lib
+        /NODEFAULTLIB:RPC.lib
+        /NODEFAULTLIB:Serialization.lib
     )
 
-    # Precompiled header — stdafx.h / stdafx.cpp
-    target_precompile_headers(nanoFramework.nanoCLR PRIVATE stdafx.h)
+    # Precompiled header — stdafx.h / stdafx.cpp. Restrict to C++ TUs:
+    # stdafx.h pulls in <mutex>, base64.h (C++), etc., so it can't be
+    # consumed by the .c sources (nanoprintf.c, nanoSupport_CRC32.c,
+    # WireProtocol_*.c, hal_littlefs.c, lfs.c, lfs_util.c).
+    target_precompile_headers(nanoFramework.nanoCLR PRIVATE
+        "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/stdafx.h>"
+    )
 endif()
 
 if(APPLE)
