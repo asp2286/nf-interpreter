@@ -7,16 +7,16 @@ trigger: none
 pr: none
 
 variables:
-  BUILD_ALL__: "true"
+  BUILD_ALL__: "false"
   BUILD_CHIBIOS__: "false"
   BUILD_FREERTOS__: "false"
   BUILD_ESP32__: "false"
   BUILD_NXP__: "false"
   BUILD_TI__: "false"
   BUILD_THREADX__: "false"
-  BUILD_WINDOWS_NANOCLR__: "false"
-  BUILD_POSIX__: "false"
-  BUILD_NANOCLR_CLI__: "false"
+  BUILD_WINDOWS_NANOCLR__: "true"
+  BUILD_POSIX__: "true"
+  BUILD_NANOCLR_CLI__: "true"
   RUN_MSCORLIB_TESTS__: "false"
   StartReleaseCandidate: "false"
   NBGV_VersionMajor: "9"
@@ -63,7 +63,7 @@ jobs:
 
     steps:
       - checkout: self
-        fetchDepth: 1
+        fetchDepth: 0
 
       - powershell: |
           echo "##vso[task.setvariable variable=RUN_MSCORLIB_TESTS;isOutput=true]$(RUN_MSCORLIB_TESTS__)"
@@ -141,8 +141,7 @@ jobs:
 
     steps:
       - checkout: self
-        fetchDepth: 1
-        condition: ne(variables['System.PullRequest.PullRequestId'], '')
+        fetchDepth: 0
 
       - template: azure-pipelines-templates/download-install-llvm.yml
       - template: azure-pipelines-templates/check-code-style.yml
@@ -202,6 +201,9 @@ jobs:
       TargetPlatform: "stm32"
 
     steps:
+      - checkout: self
+        fetchDepth: 0
+
       - template: azure-pipelines-templates/build-preparations.yml
       - template: azure-pipelines-templates/download-install-arm-gcc-toolchain.yml
       - template: azure-pipelines-templates/download-srecord.yml
@@ -324,6 +326,9 @@ jobs:
       TargetPlatform: "rp"
 
     steps:
+      - checkout: self
+        fetchDepth: 0
+
       - template: azure-pipelines-templates/build-preparations.yml
       - template: azure-pipelines-templates/download-install-arm-gcc-toolchain.yml
       - template: azure-pipelines-templates/install-kconfig-tools.yml
@@ -474,6 +479,7 @@ jobs:
     steps:
       - checkout: self
         path: s/nf-interpreter
+        fetchDepth: 0
 
       - template: azure-pipelines-templates/checkout-idf.yml
         parameters:
@@ -558,6 +564,9 @@ jobs:
       TargetPlatform: "freertos"
 
     steps:
+      - checkout: self
+        fetchDepth: 0
+
       - template: azure-pipelines-templates/build-preparations.yml
       - template: azure-pipelines-templates/download-install-arm-gcc-toolchain.yml
       - template: azure-pipelines-templates/download-srecord.yml
@@ -692,6 +701,9 @@ jobs:
       TargetPlatform: "ti_simplelink"
 
     steps:
+      - checkout: self
+        fetchDepth: 0
+
       - template: azure-pipelines-templates/build-preparations.yml
       - template: azure-pipelines-templates/download-install-arm-gcc-toolchain.yml
       - template: azure-pipelines-templates/install-kconfig-tools.yml
@@ -806,6 +818,9 @@ jobs:
       TargetPlatform: "efm32"
 
     steps:
+      - checkout: self
+        fetchDepth: 0
+
       - template: azure-pipelines-templates/build-preparations.yml
       - template: azure-pipelines-templates/download-install-arm-gcc-toolchain.yml
       - template: azure-pipelines-templates/download-hexdfu.yml
@@ -913,6 +928,7 @@ jobs:
 
     steps:
       - checkout: self
+        fetchDepth: 0
       - checkout: littlefs
         fetchDepth: 1
 
@@ -1076,6 +1092,7 @@ jobs:
 
     steps:
       - checkout: self
+        fetchDepth: 0
       - checkout: littlefs
         fetchDepth: 1
 
@@ -1288,6 +1305,7 @@ jobs:
 
     steps:
       - checkout: self
+        fetchDepth: 0
 
       - bash: |
           set -euo pipefail
@@ -1402,6 +1420,7 @@ jobs:
 
     steps:
       - checkout: self
+        fetchDepth: 0
       - checkout: littlefs
         fetchDepth: 1
 
@@ -1568,7 +1587,7 @@ jobs:
 
     steps:
       - checkout: self
-        fetchDepth: 1
+        fetchDepth: 0
       - checkout: mscorlib
         fetchDepth: 100
         submodules: true
